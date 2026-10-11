@@ -4,57 +4,50 @@ name: Build MVP B2K APK
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
-      - name: Get project
+      - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Install Java and Android SDK
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Install Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install AIDL and SDK tools
+      - name: Install system dependencies
         run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          sudo apt-get update
+          sudo apt-get install -y \
+            git zip unzip \
+            python3-pip python3-venv \
+            autoconf libtool pkg-config \
+            zlib1g-dev libncurses-dev \
+            cmake libffi-dev libssl-dev \
+            automake autopoint gettext
 
-      - name: Build APK
+      - name: Install Buildozer
         run: |
-          if [ -f gradlew ]; then
-            chmod +x gradlew
-            ./gradlew assembleDebug
-          elif [ -f buildozer.spec ]; then
-            pip install buildozer cython
-            sudo apt-get update
-            sudo apt-get install -y \
-              git zip unzip autoconf libtool pkg-config \
-              zlib1g-dev libncurses-dev libtinfo6 \
-              cmake libffi-dev libssl-dev \
-              automake autopoint gettext
-            buildozer android debug
-          else
-            echo "ERROR: No Android project or buildozer.spec found."
-            exit 1
-          fi
+          python3 -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip setuptools wheel
+          pip install buildozer cython==0.29.36
+
+      - name: Build Android APK
+        run: |
+          . .venv/bin/activate
+          buildozer -v android debug
 
       - name: Upload APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: MVP-B2K-APK
-          path: |
-            **/build/outputs/apk/debug/*.apk
-            bin/*.apk
+          path: bin/*.apk
           if-no-files-found: error
           

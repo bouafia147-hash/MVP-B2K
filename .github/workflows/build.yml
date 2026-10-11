@@ -1,72 +1,65 @@
-
 name: Build MVP B2K APK
 
 on:
-  workflow_dispatch:
-  push:
-    branches: [main]
+workflow_dispatch:
+push:
+branches: [main]
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
+build:
+runs-on: ubuntu-22.04
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+steps:
+  - name: Checkout
+    uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
+  - name: Setup Java
+    uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: '17'
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            git zip unzip python3-pip python3-venv \
-            autoconf libtool pkg-config \
-            zlib1g-dev libncurses-dev cmake \
-            libffi-dev libssl-dev automake \
-            autopoint gettext
+  - name: Setup Android SDK
+    uses: android-actions/setup-android@v3
+    with:
+      packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
 
-      - 
-      - name: Install Android tools in Buildozer SDK
-        run: |
-          SDK_DIR="$HOME/.buildozer/android/platform/android-sdk"
-          mkdir -p "$SDK_DIR"
+  - name: Install dependencies
+    run: |
+      sudo apt-get update
+      sudo apt-get install -y \
+        git zip unzip python3-pip python3-venv \
+        autoconf libtool pkg-config \
+        zlib1g-dev libncurses-dev cmake \
+        libffi-dev libssl-dev automake \
+        autopoint gettext
 
-          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | head -n 1)"
+  - name: Configure Buildozer SDK
+    run: |
+      SDK_DIR="$HOME/.buildozer/android/platform/android-sdk"
+      mkdir -p "$SDK_DIR"
+      cp -a "$ANDROID_HOME/." "$SDK_DIR/"
+      echo "ANDROIDSDK=$SDK_DIR" >> "$GITHUB_ENV"
+      echo "ANDROID_HOME=$SDK_DIR" >> "$GITHUB_ENV"
+      echo "ANDROID_SDK_ROOT=$SDK_DIR" >> "$GITHUB_ENV"
+      test -x "$SDK_DIR/build-tools/35.0.0/aidl"
 
-          "$SDKMANAGER" --sdk_root="$SDK_DIR" --licenses
-          "$SDKMANAGER" --sdk_root="$SDK_DIR" \
-            "platform-tools" \
-            "platforms;android-35" \
-            "build-tools;35.0.0"
+  - name: Install Buildozer
+    run: |
+      python3 -m venv .venv
+      . .venv/bin/activate
+      pip install --upgrade pip setuptools wheel
+      pip install buildozer cython==0.29.36
 
-          echo "ANDROIDSDK=$SDK_DIR" >> "$GITHUB_ENV"
-          echo "ANDROID_HOME=$SDK_DIR" >> "$GITHUB_ENV"
-          echo "ANDROID_SDK_ROOT=$SDK_DIR" >> "$GITHUB_ENV"
+  - name: Build APK
+    run: |
+      . .venv/bin/activate
+      buildozer -v android debug
 
-          test -x "$SDK_DIR/build-tools/35.0.0/aidl"
-
-      - name: Install Buildozer
-        run: |
-          python3 -m venv .venv
-          . .venv/bin/activate
-          pip install --upgrade pip setuptools wheel
-          pip install buildozer cython==0.29.36
-
-      - name: Build APK
-        run: |
-          . .venv/bin/activate
-          buildozer -v android debug
-
-      - name: Upload APK
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: MVP-B2K-APK
-          path: bin/*.apk
-          if-no-files-found: error
-          
+  - name: Upload APK
+    if: success()
+    uses: actions/upload-artifact@v4
+    with:
+      name: MVP-B2K-APK
+      path: bin/*.apk
+      if-no-files-found: error

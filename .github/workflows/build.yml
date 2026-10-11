@@ -9,10 +9,9 @@ branches:
 jobs:
 build:
 runs-on: ubuntu-22.04
-
 steps:
-  - name: Checkout
-    uses: actions/checkout@v4
+- name: Checkout
+uses: actions/checkout@v4
 
   - name: Setup Java
     uses: actions/setup-java@v4
@@ -23,9 +22,7 @@ steps:
   - name: Install dependencies
     run: |
       sudo apt-get update
-      sudo apt-get install -y git zip unzip python3-pip python3-venv \
-        autoconf libtool pkg-config zlib1g-dev libncurses-dev cmake \
-        libffi-dev libssl-dev automake autopoint gettext
+      sudo apt-get install -y git zip unzip python3-pip python3-venv autoconf libtool pkg-config zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev automake autopoint gettext
 
   - name: Setup Android SDK
     uses: android-actions/setup-android@v3
@@ -34,16 +31,6 @@ steps:
         platform-tools
         platforms;android-35
         build-tools;35.0.0
-
-  - name: Configure Android SDK
-    run: |
-      SDK_DIR="$HOME/.buildozer/android/platform/android-sdk"
-      mkdir -p "$SDK_DIR"
-      cp -a "$ANDROID_HOME/." "$SDK_DIR/"
-      echo "ANDROIDSDK=$SDK_DIR" >> "$GITHUB_ENV"
-      echo "ANDROID_HOME=$SDK_DIR" >> "$GITHUB_ENV"
-      echo "ANDROID_SDK_ROOT=$SDK_DIR" >> "$GITHUB_ENV"
-      test -x "$SDK_DIR/build-tools/35.0.0/aidl"
 
   - name: Install Buildozer
     run: |

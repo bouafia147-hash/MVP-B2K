@@ -1,57 +1,58 @@
+
 name: Build MVP B2K APK
 
-"on":
-workflow_dispatch:
-push:
-branches:
-- main
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
-build:
-runs-on: ubuntu-22.04
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-steps:
-  - name: Checkout repository
-    uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
-  - name: Set up Java
-    uses: actions/setup-java@v4
-    with:
-      distribution: temurin
-      java-version: '17'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-  - name: Set up Python
-    uses: actions/setup-python@v5
-    with:
-      python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev cmake libffi-dev libssl-dev build-essential ccache
 
-  - name: Install dependencies
-    run: |
-      sudo apt-get update
-      sudo apt-get install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev cmake libffi-dev libssl-dev build-essential ccache
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
-  - name: Set up Android SDK
-    uses: android-actions/setup-android@v3
+      - name: Install Android packages
+        run: |
+          sdkmanager --licenses
+          sdkmanager --install "platform-tools" "platforms;android-33" "build-tools;33.0.2" "cmdline-tools;latest" "ndk;25.2.9519653"
 
-  - name: Install Android packages
-    run: |
-      sdkmanager --licenses
-      sdkmanager --install "platform-tools" "platforms;android-33" "build-tools;33.0.2" "cmdline-tools;latest" "ndk;25.2.9519653"
+      - name: Install Buildozer
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install buildozer cython==0.29.36
 
-  - name: Install Buildozer
-    run: |
-      python -m pip install --upgrade pip setuptools wheel
-      pip install buildozer cython==0.29.36
+      - name: Build APK
+        run: |
+          export ANDROID_HOME="$ANDROID_SDK_ROOT"
+          export ANDROIDSDK="$ANDROID_SDK_ROOT"
+          export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
+          buildozer android debug
 
-  - name: Build APK
-    run: |
-      export ANDROID_HOME="$ANDROID_SDK_ROOT"
-      export ANDROIDSDK="$ANDROID_SDK_ROOT"
-      export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
-      buildozer android debug
-
-  - name: Upload APK
-    uses: actions/upload-artifact@v4
-    with:
-      name: MVP-B2K-APK
-      path: bin/*.apk
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MVP-B2K-APK
+          path: bin/*.apk
+          

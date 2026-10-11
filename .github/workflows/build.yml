@@ -48,6 +48,15 @@ jobs:
           pip install --upgrade pip setuptools wheel
           pip install buildozer cython==0.29.36
 
+      - name: Install Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Configure Android SDK
+        run: |
+          echo "ANDROIDSDK=$ANDROID_HOME" >> "$GITHUB_ENV"
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          
       - name: Build Android APK
         run: |
           . .venv/bin/activate

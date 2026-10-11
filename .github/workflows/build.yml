@@ -1,16 +1,13 @@
-
 name: Build MVP B2K APK
 
 "on":
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+workflow_dispatch:
+push:
+branches:
+- main
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
-    
+build:
 runs-on: ubuntu-22.04
 
 steps:
@@ -38,6 +35,7 @@ steps:
 
   - name: Install Android packages
     run: |
+      sdkmanager --licenses
       sdkmanager --install "platform-tools" "platforms;android-33" "build-tools;33.0.2" "cmdline-tools;latest" "ndk;25.2.9519653"
 
   - name: Install Buildozer

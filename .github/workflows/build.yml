@@ -1,4 +1,14 @@
 
+      - name: Install Android SDK tools
+        uses: android-actions/setup-android@v3
+
+      - name: Configure Buildozer SDK
+        run: |
+          echo "ANDROIDSDK=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "ANDROIDNDK=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018"
+          
 name: Build MVP B2K APK
 
 on:

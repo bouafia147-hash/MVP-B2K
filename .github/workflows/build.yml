@@ -1,13 +1,16 @@
+
 name: Build MVP B2K APK
 
-on:
-workflow_dispatch:
-push:
-branches:
-- main
+"on":
+  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
-build:
+  build:
+    runs-on: ubuntu-22.04
+    
 runs-on: ubuntu-22.04
 
 steps:

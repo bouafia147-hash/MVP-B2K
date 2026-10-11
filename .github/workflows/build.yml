@@ -3,7 +3,8 @@ name: Build MVP B2K APK
 on:
 workflow_dispatch:
 push:
-branches: [main]
+branches:
+- main
 
 jobs:
 build:
@@ -24,42 +25,28 @@ steps:
     with:
       python-version: '3.11'
 
-  - name: Install system dependencies
+  - name: Install dependencies
     run: |
       sudo apt-get update
-      sudo apt-get install -y \
-        git zip unzip autoconf libtool pkg-config \
-        zlib1g-dev libncurses5-dev libncursesw5-dev \
-        libtinfo5 cmake libffi-dev libssl-dev \
-        build-essential ccache
+      sudo apt-get install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev cmake libffi-dev libssl-dev build-essential ccache
 
   - name: Set up Android SDK
     uses: android-actions/setup-android@v3
 
-  - name: Install Android SDK packages
+  - name: Install Android packages
     run: |
-      sdkmanager --licenses
-      sdkmanager \
-        "platform-tools" \
-        "platforms;android-33" \
-        "build-tools;33.0.2" \
-        "cmdline-tools;latest" \
-        "ndk;25.2.9519653"
+      sdkmanager --install "platform-tools" "platforms;android-33" "build-tools;33.0.2" "cmdline-tools;latest" "ndk;25.2.9519653"
 
   - name: Install Buildozer
     run: |
       python -m pip install --upgrade pip setuptools wheel
       pip install buildozer cython==0.29.36
 
-  - name: Configure Android SDK paths
-    run: |
-      echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-      echo "ANDROIDSDK=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-      echo "ANDROIDNDK=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
-      echo "PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH" >> $GITHUB_ENV
-
   - name: Build APK
     run: |
+      export ANDROID_HOME="$ANDROID_SDK_ROOT"
+      export ANDROIDSDK="$ANDROID_SDK_ROOT"
+      export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
       buildozer android debug
 
   - name: Upload APK

@@ -31,12 +31,14 @@ jobs:
             cmake libffi-dev libssl-dev \
             automake autopoint gettext
 
+      - 
       - name: Build APK
-        uses: digreatbuddha/buildozer-action@v1
-        with:
-          workdir: .
-          buildozer-cmd: buildozer android debug
-
+        run: |
+          . .venv/bin/activate
+          export ANDROIDSDK="$ANDROID_HOME"
+          export ANDROID_HOME="$ANDROID_HOME"
+          buildozer -v android debug
+          
       - name: Upload APK
         if: success()
         uses: actions/upload-artifact@v4
